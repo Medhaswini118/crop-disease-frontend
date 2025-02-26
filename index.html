@@ -9,19 +9,18 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(to right, #11998e, #38ef7d);
-            color: white;
             text-align: center;
             margin: 50px;
             color: #fff; /* White text for better contrast */
         }
 
-        /* Welcome Header - Positioned above the container */
+        /* Welcome Header */
         .welcome-header {
             font-size: 28px;
             font-weight: bold;
             margin-bottom: 20px;
             animation: fadeIn 2s ease-in-out;
-            color: #ffeb3b; /* Yellow to stand out */
+            color: #ffeb3b;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
         }
 
@@ -96,12 +95,12 @@
             box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        #result {
+        #disease-name {
             color: #388e3c;
             font-size: 20px;
         }
 
-        #prevention {
+        #prevention-measures {
             color: #1976d2;
             font-size: 16px;
             margin-top: 10px;
@@ -160,8 +159,8 @@
         <div id="error"></div>
 
         <div id="result-container">
-            <div id="result"></div>
-            <div id="prevention"></div>
+            <h3 id="disease-name"></h3>
+            <p id="prevention-measures"></p>
         </div>
     </div>
 
@@ -205,6 +204,8 @@
             // Clear previous results
             document.getElementById("result-container").style.display = "none";
             document.getElementById("error").textContent = "";
+            document.getElementById("disease-name").textContent = "⏳ Predicting...";
+            document.getElementById("prevention-measures").textContent = "";
 
             // Show image preview
             const reader = new FileReader();
@@ -218,22 +219,31 @@
             const formData = new FormData();
             formData.append("file", file);
 
-            // Send to backend
+            // Send request to backend
             fetch("https://crop-disease-detection-6kr0.onrender.com/predict", {
                 method: "POST",
-                body: formData
+                body: formData,
+                headers: {
+                    "Accept": "application/json"
+                }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
                     document.getElementById("error").textContent = "❌ Error: " + data.error;
                 } else {
-                    document.getElementById("result").textContent = "🌾 Disease: " + data.disease;
-                    document.getElementById("prevention").textContent = "💡 Prevention: " + data.prevention;
+                    document.getElementById("disease-name").innerHTML = `<strong>🌾 Disease:</strong> ${data.disease}`;
+                    document.getElementById("prevention-measures").innerHTML = `<strong>💡 Prevention:</strong> ${data.prevention}`;
+                    
+                    if (data.confidence !== undefined) {
+                        document.getElementById("disease-name").innerHTML += `<br><strong>🔍 Confidence:</strong> ${data.confidence}%`;
+                    }
+
                     document.getElementById("result-container").style.display = "block"; // Show results
                 }
             })
             .catch(error => {
+                console.error("Error:", error);
                 document.getElementById("error").textContent = "❌ Failed to fetch prediction.";
             });
         }
@@ -249,6 +259,7 @@
 
 </body>
 </html>
+
 
 
 
